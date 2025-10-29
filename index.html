@@ -5,16 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LINE MINI App Universal URL</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 40px; }
-    img { border-radius: 50%; margin-top: 20px; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    body { font-family: sans-serif; padding: 30px; text-align: center; }
+    img { border-radius: 50%; margin-top: 10px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .info { text-align: left; display: inline-block; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>LINE MINI App Universal URL</h1>
+  <h2>LINE MINI App Universal URL</h2>
   <p id="status">กำลังตรวจสอบ...</p>
-  <button id="btnLogin" style="display:none;">Login with LINE</button>
-  <div id="profile"></div>
+
+  <div id="profileSection" style="display:none;">
+    <img id="pictureUrl" width="100" />
+    <div class="info">
+      <p><strong>userId:</strong> <span id="userId"></span></p>
+      <p><strong>displayName:</strong> <span id="displayName"></span></p>
+      <p><strong>statusMessage:</strong> <span id="statusMessage"></span></p>
+      <p><strong>email:</strong> <span id="email"></span></p>
+    </div>
+  </div>
+
+  <button id="btnLogin" style="display:none;">Log in</button>
+  <button id="btnLogout" style="display:none;">Log out</button>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="./main.js"></script>
