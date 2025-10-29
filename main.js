@@ -1,4 +1,6 @@
-const liffId = "2008386498-JrAadEz1"; // 👈 ใช้ LIFF ID จริงของคุณ
+// const liffId = "2008386498-JrAadEz1"; // 👈 ใช้ LIFF ID จริงของคุณฦ
+const liffId = params.get('id') ? params.get('id') : "2008386498-JrAadEz1";
+
 
 function mobileCheck() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
