@@ -1,34 +1,71 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LINE MINI App Universal URL</title>
-  <style>
-    body { font-family: sans-serif; padding: 30px; text-align: center; }
-    img { border-radius: 50%; margin-top: 10px; }
-    button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    .info { text-align: left; display: inline-block; margin-top: 20px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการงานซ่อม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background-color: #f9fafb; }
+        .spinner { display: inline-block; width: 2rem; height: 2rem; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #1e5631; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* (CSS อื่นๆ เหมือนเดิม) */
+        .liff-button {
+            display: none; /* ซ่อนไว้ก่อน */
+            background-color: #00B900;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .liff-button:hover { background-color: #00a300; }
+    </style>
 </head>
-<body>
-  <h2>LINE MINI App Universal URL</h2>
-  <p id="status">กำลังตรวจสอบ...</p>
-
-  <div id="profileSection" style="display:none;">
-    <img id="pictureUrl" width="100" />
-    <div class="info">
-      <p><strong>userId:</strong> <span id="userId"></span></p>
-      <p><strong>displayName:</strong> <span id="displayName"></span></p>
-      <p><strong>statusMessage:</strong> <span id="statusMessage"></span></p>
-      <p><strong>email:</strong> <span id="email"></span></p>
+<body class="p-4">
+    <div id="loading" class="text-center py-10">
+        <div class="spinner mx-auto"></div>
+        <p class="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
     </div>
-  </div>
 
-  <button id="btnLogin" style="display:none;">Log in</button>
-  <button id="btnLogout" style="display:none;">Log out</button>
+    <div id="liff-login-controls" class="text-center py-10">
+        <button id="btnLogin" class="liff-button">
+            <i class="fab fa-line mr-2"></i> เข้าสู่ระบบด้วย LINE
+        </button>
+        <button id="btnLogout" class="liff-button" style="background-color: #777;">
+            ออกจากระบบ
+        </button>
+    </div>
+    <div id="appContainer" class="hidden max-w-xl mx-auto">
+        <h1 class="text-2xl font-bold mb-5 text-center" style="color: #1e5631;">
+             <i class="fas fa-wrench mr-2"></i>จัดการงานซ่อม
+        </h1>
+        <p id="ticketIdDisplay" class="text-center font-semibold text-lg text-blue-700 mb-5"></p>
+        <div class="form-section">
+             </div>
+         <div class="form-section">
+             </div>
+        <div class="form-section">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700 flex items-center">
+                <i class="fas fa-cogs mr-2 text-gray-400"></i>การดำเนินการ
+            </h2>
+            <form id="updateForm">
+                 <div class="mt-6 text-center">
+                    <button type="submit" id="saveButton" class="bg-green-700 hover:bg-green-800 text-white font-medium py-2 px-6 rounded-md transition-colors w-full md:w-auto disabled:bg-gray-400">
+                       <i class="fas fa-save mr-2"></i> บันทึกการเปลี่ยนแปลง
+                    </button>
+                </div>
+            </form>
+        </div>
+        <p class="text-center text-xs text-gray-400 mt-4">Technician LIFF v1.0</p>
+    </div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="./main.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
