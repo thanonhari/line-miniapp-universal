@@ -41,13 +41,16 @@ function mobileCheck() {
 
 /**
  * ฟังก์ชันหลักที่ทำงานหลังจาก Login สำเร็จ
+ * (ย้ายโค้ดเดิมจาก DOMContentLoaded มาไว้ที่นี่)
  */
 async function initializeApp() {
     try {
         log("App Initializing (User is logged in)...");
 
-        // 1. แสดง Logout Button
-        btnLogOut.style.display = 'block';
+        // 1. แสดง Logout Button (ถ้าเราอยู่ใน External Browser)
+        if (!liff.isInClient()) {
+            btnLogOut.style.display = 'block';
+        }
 
         // 2. ดึงโปรไฟล์ LINE
         log("Getting LINE profile...");
@@ -74,7 +77,7 @@ async function initializeApp() {
         const urlParams = new URLSearchParams(window.location.search);
         currentTicketId = urlParams.get('ticketId');
         if (!currentTicketId) {
-            // ถ้าไม่ได้เปิดจาก Carousel (เช่น เปิดตรง) ให้แสดงข้อความ
+             // ถ้าไม่ได้เปิดจาก Carousel (เช่น เปิดตรง) ให้แสดงข้อความ
              throw new Error("ไม่พบ Ticket ID ใน URL (กรุณาเปิดจาก Carousel ใน LINE)");
         }
         ticketIdDisplay.textContent = `Ticket: ${currentTicketId}`;
@@ -94,8 +97,10 @@ async function initializeApp() {
 
     } catch (error) {
         showError(`เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}`, false);
-        // แสดงปุ่ม Logout แม้ว่า App จะโหลดไม่สำเร็จ
-        btnLogOut.style.display = 'block';
+        // แสดงปุ่ม Logout แม้ว่า App จะโหลดไม่สำเร็จ (ถ้าเปิดบน External Browser)
+        if (!liff.isInClient()) {
+            btnLogOut.style.display = 'block';
+        }
     }
 }
 
@@ -165,7 +170,6 @@ btnLogOut.addEventListener('click', () => {
 
 // --- ฟังก์ชันเรียก Backend API (Google Apps Script) ---
 async function fetchFromApi(action, params = {}, method = 'GET', body = null) {
-    // (โค้ดฟังก์ชัน fetchFromApi เหมือนเดิม)
     const url = new URL(SCRIPT_URL);
     url.searchParams.append('action', action);
     if (method === 'GET' && params) {
@@ -201,7 +205,6 @@ async function fetchFromApi(action, params = {}, method = 'GET', body = null) {
 
 // --- โหลดรายละเอียด Ticket และเติมข้อมูลลงฟอร์ม ---
 async function loadTicketDetailsAndPopulateForm(ticketId) {
-    // (โค้ดฟังก์ชัน loadTicketDetailsAndPopulateForm เหมือนเดิม)
     log(`Loading details for ticket: ${ticketId}`);
     try {
         const data = await fetchFromApi('getRepairDataById', { ticketId: ticketId });
@@ -247,7 +250,11 @@ async function loadTicketDetailsAndPopulateForm(ticketId) {
         }
         if (currentStatus === 'เสร็จสิ้น' || currentStatus === 'ยกเลิก') {
             canEdit = false;
-            // ... (Swal.fire toast 'ปิดสถานะแล้ว') ...
+            Swal.fire({
+                 toast: true, icon: 'info', title: 'ดูข้อมูลเท่านั้น',
+                 text: 'งานนี้ถูกปิดสถานะแล้ว', position: 'top',
+                 showConfirmButton: false, timer: 3000
+             });
         }
         // (Disable form logic - เหมือนเดิม)
         if (!canEdit) {
@@ -259,7 +266,11 @@ async function loadTicketDetailsAndPopulateForm(ticketId) {
             saveButton.disabled = true;
             saveButton.textContent = "ปิดสถานะ/งานของผู้อื่น";
              if (technicianUser.role === 'Technician' && currentOperator && currentOperator.trim() !== technicianUser.name.trim()){
-                 // ... (Swal.fire toast 'งานของผู้อื่น') ...
+                 Swal.fire({
+                     toast: true, icon: 'warning', title: 'งานของผู้อื่น',
+                     text: `งานนี้มอบหมายให้ ${currentOperator} แล้ว`, position: 'top',
+                     showConfirmButton: false, timer: 3000
+                 });
              }
         } else {
              operatorSelect.disabled = (technicianUser.role === 'Technician' && !!currentOperator);
@@ -279,7 +290,6 @@ async function loadTicketDetailsAndPopulateForm(ticketId) {
 
 // --- โหลดรายชื่อ Technicians ใส่ Dropdown ---
 async function populateTechnicianDropdown() {
-    // (โค้ดฟังก์ชัน populateTechnicianDropdown เหมือนเดิม)
     log("Populating technician dropdown...");
     try {
         const users = await fetchFromApi('getUsers');
@@ -307,33 +317,41 @@ async function populateTechnicianDropdown() {
 
 // --- จัดการการ Submit ฟอร์ม ---
 updateForm.addEventListener('submit', async (e) => {
-    // (โค้ดฟังก์ชัน updateForm.addEventListener เหมือนเดิม)
     e.preventDefault();
     log("Form submitted.");
     if (saveButton.disabled) return;
     const selectedOperator = operatorSelect.value;
     const selectedStatus = statusSelect.value;
-    // ... (Validation logic เหมือนเดิม) ...
-    if ((selectedStatus === 'กำลังดำเนินการ' || selectedStatus === 'เสร็จสิ้น' || selectedStatus === 'ส่งซ่อมภายนอก') && !selectedOperator) {
+    const workDate = workDateInput.value;
+    const workTime = workTimeInput.value;
+    const solution = solutionTextarea.value.trim();
+
+    // (Validation logic - เหมือนเดิม)
+     if ((selectedStatus === 'เสร็จสิ้น' || selectedStatus === 'ยกเลิก') && !solution && technicianUser.role !== 'Admin') {
+         Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกสรุปการแก้ไข/สาเหตุที่ยกเลิก', 'warning');
+         solutionTextarea.focus();
+         return;
+     }
+      if ((selectedStatus === 'กำลังดำเนินการ' || selectedStatus === 'เสร็จสิ้น' || selectedStatus === 'ส่งซ่อมภายนอก') && !selectedOperator) {
            Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกผู้ปฏิบัติงาน', 'warning');
            operatorSelect.focus();
            return;
-    }
-    // ...
+      }
+
     saveButton.disabled = true;
     saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังบันทึก...';
-    // (Prepare updateDataPayload - เหมือนเดิม)
+    
     const updateDataPayload = {
         ticketId: currentTicketId,
         status: selectedStatus,
-        lineUserId: lineProfile.userId,
+        lineUserId: lineProfile.userId, // ส่ง Line ID ของช่างที่กดบันทึก
         dataObject: {
             'รหัสใบแจ้งซ่อม': currentTicketId,
             'ผู้ปฏิบัติงาน': selectedOperator,
             'สถานะ': selectedStatus,
-            'วันที่ปฏิบัติงาน': workDateInput.value,
-            'เวลาที่ปฏิบัติงาน': workTimeInput.value,
-            'สรุปการแก้ไข/หมายเหตุ': solutionTextarea.value.trim()
+            'วันที่ปฏิบัติงาน': workDate,
+            'เวลาที่ปฏิบัติงาน': workTime,
+            'สรุปการแก้ไข/หมายเหตุ': solution
         }
     };
     try {
@@ -366,9 +384,8 @@ updateForm.addEventListener('submit', async (e) => {
 });
 
 // --- Helper Functions (log, showError, disableForm, formatDate) ---
-// (โค้ด Helper Functions ทั้งหมดเหมือนเดิม)
 function log(...messages) {
-    // console.log("[LIFF Log]", ...messages); // เปิดใช้เมื่อต้องการ Debug
+    console.log("[LIFF Log]", ...messages); // เปิดใช้ Console Log เพื่อ Debug
 }
 function showError(message, isFatal = false) {
     loadingDiv.innerHTML = `<p class="text-red-600 font-bold text-center">${message}</p>`;
